@@ -1,0 +1,138 @@
+import { Request, Response } from "express";
+import model from "../../Sequelize/model";
+import { col, fn } from "sequelize";
+import { getFileURL } from "../AWS/aws-operation";
+import Fuse from 'fuse.js';
+
+export const getCategoryAndSubCategory = async (req: Request, res: Response) => {
+    try {
+        const { type, Category } = req.query;
+        switch (type) {
+            case "Category": {
+                const data = await model.Category.findAll({
+                    attributes: [[fn("DISTINCT", col("Type")), "Type"]],
+                    raw: true
+                });
+                return res.send({ success: true, data: data.map((item: any) => item.Type) });
+            }
+            case "SubCategory": {
+                const data = await model.Category.findAll({
+                    where: {
+                        Type: Category
+                    },
+                    attributes: [[fn("DISTINCT", col("SubType")), "SubType"]],
+                    raw: true
+                });
+                return res.send({ success: true, data: data.map((item: any) => item.SubType) });
+            }
+        }
+        return res.send({ success: false, data: "Type Does Not Match!!" });
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
+
+export const getImageURL = async (req: Request, res: Response) => {
+    try {
+        const { baseURL } = req.body;
+        const url = await getFileURL(baseURL);
+        return res.send({ success: true, data: url });
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
+
+export const getCategoryAndSubCategoryForLandingPage = async (req: Request, res: Response) => {
+    try {
+        const { type, shopID } = req.body;
+        switch (type) {
+            case "Category": {
+                const data = await model.ProductInventory.findAll({
+                    where: {
+                        ShopDetailID: shopID
+                    },
+                    attributes: [[fn("DISTINCT", col("CategoryType")), "CategoryType"]],
+                    raw: true
+                });
+                const uniqueCategory = data.map((item: any) => item.CategoryType);
+                console.log("Unique Category    ", uniqueCategory);
+                const arr = [];
+                for (const item of uniqueCategory) {
+                    const data1 = await model.Category.findAll({
+                        where: {
+                            Type: item
+                        }
+                    });
+                    if (data1.length > 0) {
+                        const url = data1[0].dataValues.CategoryImageURL;
+                        const imageURL = await getFileURL(url);
+                        arr.push({ Category: item, ImageURL: imageURL });
+                    }
+                }
+                return res.send({ success: true, data: arr });
+            }
+        }
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
+
+export const getSubCategoryItem = async (req: Request, res: Response) => {
+    try {
+        const { Category, SubCategory, pageNo, shopID } = req.body;
+        const pageSize = 6;
+        const data = await model.ProductInventory.findAll({
+            where: {
+                CategoryType: Category,
+                SubCategoryType: SubCategory,
+                ShopDetailID: shopID
+            },
+            limit: 6,
+            offset: pageSize * pageNo,
+            attributes: ["ProductName", "CategoryType", "SubCategoryType", "ShopDetailID", "ProductDescription", "CostToBuy", "PerItemProfit", "ProductImagesURL"]
+        });
+
+        const arr = [];
+
+        for (const item of data) {
+            const { ProductImagesURL } = item;
+            console.log(item);
+            let obj = { ...item.dataValues };
+            const urls = [];
+            for (const baseURL of ProductImagesURL.split("||")) {
+                const url = await getFileURL(baseURL);
+                urls.push(url);
+            }
+            obj["ImageURLs"] = urls;
+            arr.push(obj);
+        }
+
+        return res.send({ success: true, data: arr })
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
+
+export const getSearchItems = async (req: Request, res: Response) => {
+    try {
+        const { searchStr, shopID } = req.body;
+        const prd = await model.ProductInventory.findAll({
+            where: {
+                ShopDetailID: shopID
+            }
+        });
+        const fuse = new Fuse(prd, {
+            keys: ["ProductName"],
+            threshold: 0.3
+        });
+        const result = fuse.search(searchStr).map((result) => result.item);
+        return res.send({ success: true, data: result.map((item: any) => item.ProductName) });
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
