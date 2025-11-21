@@ -1,4 +1,4 @@
-import { getCategoryAndSubCategory, getCategoryAndSubCategoryForLandingPage, getImageURL, getSearchItems, getSubCategoryItem } from "../Controller/EComController";
+import { getCategoryAndSubCategory, getCategoryAndSubCategoryForLandingPage, getFilterItems, getImageURL, getSearchItems, getSubCategoryItem } from "../Controller/EComController";
 
 const express = require("express");
 const route = express.Router();
@@ -8,5 +8,6 @@ route.post("/getImageURL", getImageURL);
 route.post("/getCategoryAndSubCategoryForLandingPage", getCategoryAndSubCategoryForLandingPage);
 route.post("/getSubCategoryItem", getSubCategoryItem);
 route.post("/getSearchItems", getSearchItems);
+route.post("/getFilterItems", getFilterItems);
 
 export default route;

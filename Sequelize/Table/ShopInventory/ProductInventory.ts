@@ -24,7 +24,10 @@ const ProductInventory = sequelize.define("ProductInventoryTable", {
     ExpiredDate: DataTypes.DATE,
     ProductImagesURL: DataTypes.STRING,
     ProductDescription: DataTypes.STRING,
-    ProductPositionInfo: DataTypes.STRING
+    ProductPositionInfo: DataTypes.STRING,
+    PerItemPrice: DataTypes.INTEGER,
+    CompanyName: DataTypes.STRING,
+    SubCategory: DataTypes.STRING
 });
 
 export default ProductInventory;

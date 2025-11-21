@@ -57,7 +57,6 @@ export const getCategoryAndSubCategoryForLandingPage = async (req: Request, res:
                     raw: true
                 });
                 const uniqueCategory = data.map((item: any) => item.CategoryType);
-                console.log("Unique Category    ", uniqueCategory);
                 const arr = [];
                 for (const item of uniqueCategory) {
                     const data1 = await model.Category.findAll({
@@ -99,7 +98,6 @@ export const getSubCategoryItem = async (req: Request, res: Response) => {
 
         for (const item of data) {
             const { ProductImagesURL } = item;
-            console.log(item);
             let obj = { ...item.dataValues };
             const urls = [];
             for (const baseURL of ProductImagesURL.split("||")) {
@@ -131,6 +129,73 @@ export const getSearchItems = async (req: Request, res: Response) => {
         });
         const result = fuse.search(searchStr).map((result) => result.item);
         return res.send({ success: true, data: result.map((item: any) => item.ProductName) });
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
+
+export const getFilterItems = async (req: Request, res: Response) => {
+    try {
+        const { type } = req.body;
+        switch (type) {
+            case "Category_Section": {
+                const { ShopId, Category } = req.body;
+                const data = await model.CategoryFilters.findAll({
+                    where: {
+                        Type: Category,
+                        ShopDetailID: ShopId
+                    }
+                });
+                return res.send({ success: true, data: data[0] });
+            }
+            case "Category_Price_Range": {
+                const { ShopId, Category } = req.body;
+                const minimumValue = await model.ProductInventory.min("PerItemPrice", {
+                    where: {
+                        CategoryType: Category,
+                        ShopDetailID: ShopId
+                    }
+                });
+                const maximumValue = await model.ProductInventory.max("PerItemPrice", {
+                    where: {
+                        CategoryType: Category,
+                        ShopDetailID: ShopId
+                    }
+                });
+                return res.send({
+                    success: true, data: {
+                        min: minimumValue,
+                        max: maximumValue
+                    }
+                });
+            }
+            case "Category_BrandNames": {
+                const { ShopId, Category } = req.body;
+                const data = await model.ProductInventory.findAll({
+                    where: {
+                        CategoryType: Category,
+                        ShopDetailID: ShopId
+                    },
+                    attributes: [[fn("DISTINCT", col("CompanyName")), "CompanyName"]],
+                    raw: true
+                });
+                return res.send({ success: true, data: data.map((item: any) => item.CompanyName) });
+            }
+            case "Category_SubCategory": {
+                const { ShopId, Category } = req.body;
+                const data = await model.ProductInventory.findAll({
+                    where: {
+                        CategoryType: Category,
+                        ShopDetailID: ShopId
+                    },
+                    attributes: [[fn("DISTINCT", col("SubCategory")), "SubCategory"]],
+                    raw: true
+                });
+                return res.send({ success: true, data: data.map((item: any) => item.SubCategory) });
+            }
+        }
+        return res.send({ success: false, data: "Type Does Not Match!!" });
     } catch (error) {
         console.log("Error  ", error);
         return res.send({ success: false });

@@ -7,6 +7,7 @@ import ChatGroup from "./Table/Chat/ChatGroup";
 import ChatMessage from "./Table/Chat/ChatMessage";
 import PinnedChat from "./Table/Chat/PinnedChat";
 import CityMaster from "./Table/CityMaster";
+import CategoryFilters from "./Table/E-Com/CategoryFilters";
 import InventoryRequest from "./Table/InventoryRequest";
 import InventoryRequestActivities from "./Table/InventoryRequestActivities";
 import ItemSchema from "./Table/Layout/ItemSchema";
@@ -26,31 +27,32 @@ import UserMaster from "./Table/User/UserMaster";
 
 
 const model: Record<string, any> = {
-    InventoryRequestTable: InventoryRequest,
-    ProductType: ProductType,
-    InventoryRequestActivities: InventoryRequestActivities,
-    CityMaster: CityMaster,
-    UserMaster: UserMaster,
-    OrganizationDetails: OrganizationDetails,
-    ShopDetails: ShopDetails,
-    InventoryCountRequest: InventoryCountRequest,
-    Loss: Loss,
-    Profit: Profit,
-    AmountPurcase: AmountPurcase,
-    SalesCount: SalesCount,
-    Container: Container,
-    ContainerRowDetails: ContainerRowDetails,
-    ContainerColumnDetails: ContainerColumnDetails,
-    ProductInventory: ProductInventory,
-    SellRecords: SellRecords,
-    ShopNotes: ShopNotes,
-    PinnedChat: PinnedChat,
-    ChatMessage: ChatMessage,
-    ChatGroup: ChatGroup,
-    Category: Category,
-    ItemSchema: ItemSchema,
-    SectionSchema: SectionSchema,
-    Notification: Notification
+    InventoryRequest,
+    ProductType,
+    InventoryRequestActivities,
+    CityMaster,
+    UserMaster,
+    OrganizationDetails,
+    ShopDetails,
+    InventoryCountRequest,
+    Loss,
+    Profit,
+    AmountPurcase,
+    SalesCount,
+    Container,
+    ContainerRowDetails,
+    ContainerColumnDetails,
+    ProductInventory,
+    SellRecords,
+    ShopNotes,
+    PinnedChat,
+    ChatMessage,
+    ChatGroup,
+    Category,
+    ItemSchema,
+    SectionSchema,
+    Notification,
+    CategoryFilters
 };
 
 OrganizationDetails.hasMany(UserMaster);
@@ -135,5 +137,8 @@ SectionSchema.belongsTo(ShopDetails);
 
 UserMaster.hasMany(Notification);
 Notification.belongsTo(UserMaster);
+
+ShopDetails.hasMany(CategoryFilters);
+CategoryFilters.belongsTo(ShopDetails);
 
 export default model;
