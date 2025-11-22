@@ -201,3 +201,51 @@ export const getFilterItems = async (req: Request, res: Response) => {
         return res.send({ success: false });
     }
 }
+
+export const getItems = async (req: Request, res: Response) => {
+    try {
+        const { type } = req.body;
+        switch (type) {
+            case "Category_Items": {
+                const { ShopId, Category, pageNo } = req.body;
+                const pageSize = 6;
+                const data = await model.ProductInventory.findAll({
+                    where: {
+                        ShopDetailID: ShopId,
+                        CategoryType: Category
+                    },
+                    offset: pageSize * pageNo,
+                    limit: pageSize
+                });
+                for (const item of data) {
+                    const url: Array<string> = item.dataValues.ProductImagesURL.split("||");
+                    item.dataValues.ProductImagesURL = [];
+                    for (const baseURL of url) {
+                        const fileURL = await getFileURL(baseURL);
+                        item.dataValues.ProductImagesURL.push(fileURL);
+                    }
+                }
+                return res.send({ success: true, data });
+            }
+        }
+        return res.send({ success: false, data: "Type Does Not Match!!" });
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
+
+export const getItemSchema = async (req: Request, res: Response) => {
+    try {
+        const { ShopId } = req.body;
+        const data = await model.ItemSchema.findAll({
+            where: {
+                ShopDetailID: ShopId
+            }
+        });
+        return res.send({ success: true, data: data[0].ItemUIType });
+    } catch (error) {
+        console.log("Error  ", error);
+        return res.send({ success: false });
+    }
+}
